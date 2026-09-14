@@ -13,6 +13,7 @@ from meal_api import (
     get_recipe_details,
 )
 from usda_api import search_food_nutrition
+from pipeline import get_recipe_with_nutrition
 
 
 load_dotenv()
@@ -86,3 +87,16 @@ async def get_food_nutrition(food_name: str):
         )
 
     return food
+
+
+@app.get("/recipes/{meal_id}/nutrition")
+async def get_recipe_nutrition(meal_id: str):
+    recipe = await get_recipe_with_nutrition(meal_id)
+
+    if recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Recipe not found"
+        )
+
+    return recipe
