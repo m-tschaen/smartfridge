@@ -1,5 +1,7 @@
 import httpx
 
+from models import Recipe
+
 
 THEMEALDB_URL = "https://www.themealdb.com/api/json/v1/1"
 
@@ -33,4 +35,4 @@ async def get_recipe_details(meal_id: str):
         if not meals:
             return None
 
-        return meals[0]
+        return Recipe.model_validate(meals[0])
