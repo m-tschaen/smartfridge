@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from dotenv import load_dotenv
 
 from models import UserProfile
 from metabolism import (
@@ -11,7 +12,10 @@ from meal_api import (
     search_recipes_by_ingredient,
     get_recipe_details,
 )
+from usda_api import search_food_nutrition
 
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -69,3 +73,16 @@ async def get_recipe(meal_id: str):
         )
 
     return recipe
+
+
+@app.get("/nutrition/{food_name}")
+async def get_food_nutrition(food_name: str):
+    food = await search_food_nutrition(food_name)
+
+    if food is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Food not found"
+        )
+
+    return food
