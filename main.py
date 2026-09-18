@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from dotenv import load_dotenv
 
 from models import UserProfile
@@ -14,7 +15,7 @@ from meal_api import (
 )
 from usda_api import search_food_nutrition
 from pipeline import get_recipe_with_nutrition
-
+from auth import register_user, login_user, get_current_user
 
 load_dotenv()
 
@@ -25,14 +26,21 @@ app = FastAPI()
 async def root():
     return {"message": "Smart Fridge & Nutrition Coach"}
 
+@app.post("/signup")
+def signup(form_data: OAuth2PasswordRequestForm = Depends()):
+    return register_user(form_data)
+
+@app.post("/token")
+def token(form_data: OAuth2PasswordRequestForm = Depends()):
+    return login_user(form_data)
 
 @app.post("/profile")
-async def create_profile(profile: UserProfile):
+async def create_profile(profile: UserProfile, current_user: str = Depends(get_current_user)):
     return profile
 
 
 @app.post("/metabolism")
-async def get_metabolism(profile: UserProfile):
+async def get_metabolism(profile: UserProfile, current_user: str = Depends(get_current_user)):
     bmr = calculate_bmr(profile)
     tdee = calculate_tdee(profile)
 
@@ -43,7 +51,7 @@ async def get_metabolism(profile: UserProfile):
 
 
 @app.post("/nutrition-plan")
-async def get_nutrition_plan(profile: UserProfile):
+async def get_nutrition_plan(profile: UserProfile, current_user: str = Depends(get_current_user)):
     target_calories = calculate_target_calories(profile)
     macros = calculate_macros(profile)
 
@@ -54,7 +62,7 @@ async def get_nutrition_plan(profile: UserProfile):
 
 
 @app.get("/recipes")
-async def get_recipes(ingredient: str):
+async def get_recipes(ingredient: str, current_user: str = Depends(get_current_user)):
     recipes = await search_recipes_by_ingredient(ingredient)
 
     return {
@@ -64,20 +72,17 @@ async def get_recipes(ingredient: str):
 
 
 @app.get("/recipes/{meal_id}")
-async def get_recipe(meal_id: str):
+async def get_recipe(meal_id: str, current_user: str = Depends(get_current_user)):
     recipe = await get_recipe_details(meal_id)
 
     if recipe is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Recipe not found"
-        )
+        raise HTTPException(status_code=404, detail="Recipe not found")
 
     return recipe
 
 
 @app.get("/nutrition/{food_name}")
-async def get_food_nutrition(food_name: str):
+async def get_food_nutrition(food_name: str, current_user: str = Depends(get_current_user)):
     food = await search_food_nutrition(food_name)
 
     if food is None:
@@ -90,7 +95,7 @@ async def get_food_nutrition(food_name: str):
 
 
 @app.get("/recipes/{meal_id}/nutrition")
-async def get_recipe_nutrition(meal_id: str):
+async def get_recipe_nutrition(meal_id: str, current_user: str = Depends(get_current_user)):
     recipe = await get_recipe_with_nutrition(meal_id)
 
     if recipe is None:
