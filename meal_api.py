@@ -7,32 +7,43 @@ THEMEALDB_URL = "https://www.themealdb.com/api/json/v1/1"
 
 
 async def search_recipes_by_ingredient(ingredient: str):
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        response = await client.get(
-            f"{THEMEALDB_URL}/filter.php",
-            params={"i": ingredient}
-        )
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(
+                f"{THEMEALDB_URL}/filter.php",
+                params={"i": ingredient}
+            )
+            response.raise_for_status()
+            data = response.json()
 
-        response.raise_for_status()
+    except httpx.TimeoutException:
+        return []
 
-        data = response.json()
+    except httpx.HTTPStatusError:
+        return []
 
-        return data.get("meals") or []
+    return data.get("meals") or []
 
 
 async def get_recipe_details(meal_id: str):
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        response = await client.get(
-            f"{THEMEALDB_URL}/lookup.php",
-            params={"i": meal_id}
-        )
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(
+                f"{THEMEALDB_URL}/lookup.php",
+                params={"i": meal_id}
+            )
+            response.raise_for_status()
+            data = response.json()
 
-        response.raise_for_status()
+    except httpx.TimeoutException:
+        return None
 
-        data = response.json()
-        meals = data.get("meals") or []
+    except httpx.HTTPStatusError:
+        return None
 
-        if not meals:
-            return None
+    meals = data.get("meals") or []
 
-        return Recipe.model_validate(meals[0])
+    if not meals:
+        return None
+
+    return Recipe.model_validate(meals[0])

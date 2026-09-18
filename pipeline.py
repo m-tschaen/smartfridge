@@ -2,6 +2,7 @@ import asyncio
 
 from meal_api import get_recipe_details
 from usda_api import search_food_nutrition
+from ingredient_mapping import to_american
 
 
 async def get_recipe_with_nutrition(meal_id: str):
@@ -11,7 +12,7 @@ async def get_recipe_with_nutrition(meal_id: str):
         return None
 
     tasks = [
-        search_food_nutrition(item.ingredient)
+        search_food_nutrition(to_american(item.ingredient))
         for item in recipe.ingredients
     ]
 

@@ -17,45 +17,50 @@ async def search_food_nutrition(food_name: str):
         "pageSize": 1
     }
 
-    async with httpx.AsyncClient(timeout=20.0) as client:
-        response = await client.post(
-            USDA_URL,
-            params=params,
-            json=body
-        )
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.post(
+                USDA_URL,
+                params=params,
+                json=body
+            )
+            response.raise_for_status()
+            data = response.json()
 
-        response.raise_for_status()
+    except httpx.TimeoutException:
+        return {"food": food_name, "error": "USDA API timeout"}
 
-        data = response.json()
-        foods = data.get("foods") or []
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            return {"food": food_name, "error": "USDA API rate limit exceeded"}
+        return {"food": food_name, "error": f"USDA API error {e.response.status_code}"}
 
-        if not foods:
-            return None
+    foods = data.get("foods") or []
 
-        food = foods[0]
-        nutrients = food.get("foodNutrients", [])
+    if not foods:
+        return {"food": food_name, "error": "Food not found"}
 
-        nutrition = {
-            "food": food_name,
-            "calories": 0,
-            "protein": 0,
-            "carbs": 0,
-            "fat": 0
-        }
+    food = foods[0]
+    nutrients = food.get("foodNutrients", [])
 
-        for nutrient in nutrients:
-            nutrient_id = nutrient.get("nutrientId")
+    nutrition = {
+        "food": food_name,
+        "calories": 0,
+        "protein": 0,
+        "carbs": 0,
+        "fat": 0
+    }
 
-            if nutrient_id == 1008:
-                nutrition["calories"] = nutrient.get("value", 0)
+    for nutrient in nutrients:
+        nutrient_id = nutrient.get("nutrientId")
 
-            elif nutrient_id == 1003:
-                nutrition["protein"] = nutrient.get("value", 0)
+        if nutrient_id == 1008:
+            nutrition["calories"] = nutrient.get("value", 0)
+        elif nutrient_id == 1003:
+            nutrition["protein"] = nutrient.get("value", 0)
+        elif nutrient_id == 1005:
+            nutrition["carbs"] = nutrient.get("value", 0)
+        elif nutrient_id == 1004:
+            nutrition["fat"] = nutrient.get("value", 0)
 
-            elif nutrient_id == 1005:
-                nutrition["carbs"] = nutrient.get("value", 0)
-
-            elif nutrient_id == 1004:
-                nutrition["fat"] = nutrient.get("value", 0)
-
-        return nutrition
+    return nutrition
