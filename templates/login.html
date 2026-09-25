@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Fridge - Connexion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-sky-50 min-h-screen flex items-center justify-center p-6">
+
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-sky-100">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">Smart Fridge</h1>
+
+        <!-- Toggle -->
+        <div class="flex mb-6 border border-sky-200 rounded overflow-hidden">
+            <button id="tab-login" onclick="showTab('login')"
+                    class="flex-1 p-2 bg-sky-100 text-sky-800 font-medium">
+                Se connecter
+            </button>
+            <button id="tab-signup" onclick="showTab('signup')"
+                    class="flex-1 p-2 bg-white text-gray-500">
+                S'inscrire
+            </button>
+        </div>
+
+        <!-- Login form -->
+        <div id="form-login">
+            <input id="login-username" placeholder="Nom d'utilisateur"
+                   class="w-full p-2 mb-3 border border-sky-200 rounded">
+            <input id="login-password" type="password" placeholder="Mot de passe"
+                   class="w-full p-2 mb-4 border border-sky-200 rounded">
+            <button onclick="login()"
+                    class="w-full bg-orange-300 text-white p-2 rounded hover:bg-orange-400">
+                Se connecter
+            </button>
+        </div>
+
+        <!-- Signup form -->
+        <div id="form-signup" class="hidden">
+            <input id="signup-username" placeholder="Nom d'utilisateur"
+                   class="w-full p-2 mb-3 border border-sky-200 rounded">
+            <input id="signup-password" type="password" placeholder="Mot de passe"
+                   class="w-full p-2 mb-4 border border-sky-200 rounded">
+
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <input id="signup-weight" type="number" placeholder="Poids (kg)"
+                       class="p-2 border border-sky-200 rounded">
+                <input id="signup-height" type="number" placeholder="Taille (cm)"
+                       class="p-2 border border-sky-200 rounded">
+            </div>
+            <input id="signup-age" type="number" placeholder="Age"
+                   class="w-full p-2 mb-3 border border-sky-200 rounded">
+
+            <select id="signup-gender" class="w-full p-2 mb-3 border border-sky-200 rounded">
+                <option value="male">Homme</option>
+                <option value="female">Femme</option>
+            </select>
+
+            <select id="signup-activity" class="w-full p-2 mb-3 border border-sky-200 rounded">
+                <option value="sedentary">Sedentaire</option>
+                <option value="light">Legere</option>
+                <option value="moderate">Moderee</option>
+                <option value="active">Active</option>
+                <option value="very_active">Tres active</option>
+            </select>
+
+            <select id="signup-goal" class="w-full p-2 mb-4 border border-sky-200 rounded">
+                <option value="loss">Perte de poids</option>
+                <option value="maintain">Maintien</option>
+                <option value="gain">Prise de poids</option>
+            </select>
+
+            <button onclick="signup()"
+                    class="w-full bg-orange-300 text-white p-2 rounded hover:bg-orange-400">
+                Créer mon compte
+            </button>
+        </div>
+
+        <p id="message" class="text-sm text-orange-600 mt-3 text-center"></p>
+    </div>
+
+    <script>
+        function showTab(tab) {
+            document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('form-signup').classList.toggle('hidden', tab !== 'signup');
+
+            document.getElementById('tab-login').className =
+                'flex-1 p-2 ' + (tab === 'login' ? 'bg-sky-100 text-sky-800 font-medium' : 'bg-white text-gray-500');
+            document.getElementById('tab-signup').className =
+                'flex-1 p-2 ' + (tab === 'signup' ? 'bg-sky-100 text-sky-800 font-medium' : 'bg-white text-gray-500');
+        }
+
+        function showMessage(text) {
+            document.getElementById('message').textContent = text;
+        }
+
+        async function login() {
+            const body = new URLSearchParams({
+                username: document.getElementById('login-username').value,
+                password: document.getElementById('login-password').value,
+            });
+            const res = await fetch('/token', {
+                method: 'POST',
+                body: body,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showMessage(data.detail || 'Identifiants incorrects');
+                return;
+            }
+            localStorage.setItem('token', data.access_token);
+            window.location.href = '/homepage';
+        }
+
+        async function signup() {
+            const username = document.getElementById('signup-username').value;
+            const password = document.getElementById('signup-password').value;
+
+            const signupBody = new URLSearchParams({ username, password });
+            const signupRes = await fetch('/signup', {
+                method: 'POST',
+                body: signupBody,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            const signupData = await signupRes.json();
+            if (!signupRes.ok) {
+                showMessage(signupData.detail || 'Erreur lors de l\'inscription');
+                return;
+            }
+
+            const tokenRes = await fetch('/token', {
+                method: 'POST',
+                body: signupBody,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            const tokenData = await tokenRes.json();
+            if (!tokenRes.ok) {
+                showMessage('Compte cree mais connexion echouee');
+                return;
+            }
+            const token = tokenData.access_token;
+            localStorage.setItem('token', token);
+
+            const profileData = {
+                weight_kg: parseFloat(document.getElementById('signup-weight').value),
+                height_cm: parseFloat(document.getElementById('signup-height').value),
+                age: parseInt(document.getElementById('signup-age').value),
+                gender: document.getElementById('signup-gender').value,
+                activity_level: document.getElementById('signup-activity').value,
+                goal: document.getElementById('signup-goal').value,
+            };
+
+            const profileRes = await fetch('/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify(profileData),
+            });
+
+            if (!profileRes.ok) {
+                showMessage('Compte cree mais profil non enregistre');
+                return;
+            }
+
+            window.location.href = '/homepage';
+        }
+    </script>
+</body>
+</html>

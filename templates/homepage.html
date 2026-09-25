@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Fridge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background: #ece7e1; }
+        .ring {
+            background: conic-gradient(#b97577 var(--pct), #e8dfd8 0);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ring-inner {
+            background: #ece7e1;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div class="max-w-5xl mx-auto p-4 sm:p-8">
+
+        <!-- Top nav -->
+        <div class="flex justify-between items-center mb-8 relative">
+            <div>
+                <p class="text-2xl sm:text-3xl font-bold" style="color:#4a2c2e" id="greeting">Bonjour !</p>
+                <p class="text-sm" style="color:#a17879">Voici votre tableau de bord</p>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="toggleProfileDropdown()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition" style="background:#f7ece7">👤</button>
+                <button onclick="logout()" class="text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-full shadow-sm hover:shadow-md transition" style="background:#f7ece7; color:#8b5a5c;">
+                    Déconnexion
+                </button>
+            </div>
+
+            <!-- Profile dropdown -->
+            <div id="profile-dropdown" class="hidden absolute top-16 right-0 w-80 sm:w-96 p-5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xl z-20" style="background: #f7ece7;">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="font-semibold" style="color:#4a2c2e">Mon profil</p>
+                    <button onclick="toggleEdit()" class="text-xs font-medium hover:underline" style="color:#8b5a5c">Modifier ✎</button>
+                </div>
+                <div id="profile-view" class="grid grid-cols-2 gap-2 text-sm" style="color:#6b4547"></div>
+
+                <div id="profile-edit" class="hidden mt-4 pt-4" style="border-top: 1px solid #e0c4c5;">
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <input id="edit-weight" type="number" placeholder="Poids (kg)" class="p-2 rounded-lg text-sm" style="border: 2px solid #e0c4c5;">
+                        <input id="edit-height" type="number" placeholder="Taille (cm)" class="p-2 rounded-lg text-sm" style="border: 2px solid #e0c4c5;">
+                    </div>
+                    <input id="edit-age" type="number" placeholder="Age" class="w-full p-2 mb-2 rounded-lg text-sm" style="border: 2px solid #e0c4c5;">
+                    <select id="edit-gender" class="w-full p-2 mb-2 rounded-lg text-sm" style="border: 2px solid #e0c4c5;">
+                        <option value="male">Homme</option>
+                        <option value="female">Femme</option>
+                    </select>
+                    <select id="edit-activity" class="w-full p-2 mb-2 rounded-lg text-sm" style="border: 2px solid #e0c4c5;">
+                        <option value="sedentary">Sedentaire</option>
+                        <option value="light">Legere</option>
+                        <option value="moderate">Moderee</option>
+                        <option value="active">Active</option>
+                        <option value="very_active">Tres active</option>
+                    </select>
+                    <select id="edit-goal" class="w-full p-2 mb-3 rounded-lg text-sm" style="border: 2px solid #e0c4c5;">
+                        <option value="loss">Perte de poids</option>
+                        <option value="maintain">Maintien</option>
+                        <option value="gain">Prise de poids</option>
+                    </select>
+                    <div class="flex gap-2">
+                        <button onclick="saveProfile()" class="px-4 py-2 rounded-full text-xs text-white" style="background:#b97577">Enregistrer</button>
+                        <button onclick="toggleEdit()" class="px-4 py-2 rounded-full text-xs" style="background:#e0c4c5; color:#6b4547">Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calories ring -->
+        <div class="p-6 rounded-3xl shadow-sm mb-6" style="background: #f7ece7;">
+            <p class="font-semibold mb-4" style="color:#4a2c2e">Objectif calorique</p>
+            <div class="flex flex-col sm:flex-row items-center gap-6">
+                <div class="ring w-32 h-32 flex-shrink-0" id="calorie-ring" style="--pct: 0%;">
+                    <div class="ring-inner w-24 h-24">
+                        <span class="text-xl font-bold" style="color:#4a2c2e" id="calorie-number">--</span>
+                        <span class="text-xs" style="color:#a17879">kcal</span>
+                    </div>
+                </div>
+                <div class="flex-1 w-full" id="macro-mini"></div>
+            </div>
+        </div>
+
+        <!-- Frigo -->
+        <div id="section-fridge" class="p-6 rounded-3xl shadow-sm mb-6" style="background: #f7ece7;">
+            <p class="font-semibold mb-4" style="color:#4a2c2e">Mon frigo</p>
+            <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                <input id="new-ingredient" placeholder="Ex: egg" class="flex-1 p-3 rounded-xl text-sm" style="border: 2px solid #e0c4c5;">
+                <button onclick="addToFridge()" class="px-5 py-2 rounded-full text-sm text-white" style="background:#b97577">Ajouter</button>
+            </div>
+            <div id="fridge-view" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Recipes -->
+        <div id="section-recipes" class="p-6 rounded-3xl shadow-sm" style="background: #f7ece7;">
+            <div class="flex justify-between items-center mb-4">
+                <p class="font-semibold" style="color:#4a2c2e">Recettes suggerees</p>
+                <button onclick="loadSuggestions()" class="text-xs px-4 py-2 rounded-full text-white" style="background:#b97577">Actualiser</button>
+            </div>
+            <div id="recipes-view" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        let currentProfile = null;
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+
+        function authHeaders(extra = {}) {
+            return { 'Authorization': 'Bearer ' + token, ...extra };
+        }
+
+        function toggleProfileDropdown() {
+            document.getElementById('profile-dropdown').classList.toggle('hidden');
+        }
+
+        function toggleEdit() {
+            document.getElementById('profile-edit').classList.toggle('hidden');
+            if (currentProfile) {
+                document.getElementById('edit-weight').value = currentProfile.weight_kg;
+                document.getElementById('edit-height').value = currentProfile.height_cm;
+                document.getElementById('edit-age').value = currentProfile.age;
+                document.getElementById('edit-gender').value = currentProfile.gender;
+                document.getElementById('edit-activity').value = currentProfile.activity_level;
+                document.getElementById('edit-goal').value = currentProfile.goal;
+            }
+        }
+
+        async function loadProfile() {
+            const res = await fetch('/profile', { headers: authHeaders() });
+            if (!res.ok) {
+                document.getElementById('profile-view').innerHTML = '<p class="col-span-2" style="color:#a17879">Aucun profil enregistré.</p>';
+                return null;
+            }
+            const profile = await res.json();
+            currentProfile = profile;
+
+            document.getElementById('greeting').textContent = 'Bonjour, ' + profile.username + ' !';
+
+            document.getElementById('profile-view').innerHTML = `
+                <p><span class="font-medium" style="color:#4a2c2e">Poids:</span> ${profile.weight_kg}kg</p>
+                <p><span class="font-medium" style="color:#4a2c2e">Taille:</span> ${profile.height_cm}cm</p>
+                <p><span class="font-medium" style="color:#4a2c2e">Age:</span> ${profile.age}</p>
+                <p><span class="font-medium" style="color:#4a2c2e">Genre:</span> ${profile.gender}</p>
+                <p><span class="font-medium" style="color:#4a2c2e">Activite:</span> ${profile.activity_level}</p>
+                <p><span class="font-medium" style="color:#4a2c2e">Objectif:</span> ${profile.goal}</p>
+            `;
+            return profile;
+        }
+
+        async function saveProfile() {
+            const profileData = {
+                weight_kg: parseFloat(document.getElementById('edit-weight').value),
+                height_cm: parseFloat(document.getElementById('edit-height').value),
+                age: parseInt(document.getElementById('edit-age').value),
+                gender: document.getElementById('edit-gender').value,
+                activity_level: document.getElementById('edit-activity').value,
+                goal: document.getElementById('edit-goal').value,
+            };
+            const res = await fetch('/profile', {
+                method: 'POST',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(profileData),
+            });
+            if (!res.ok) { alert('Erreur'); return; }
+            document.getElementById('profile-edit').classList.add('hidden');
+            const profile = await loadProfile();
+            await loadNutrition(profile);
+        }
+
+        async function loadNutrition(profile) {
+            if (!profile) return;
+            const res = await fetch('/nutrition-plan', {
+                method: 'POST',
+                headers: authHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(profile),
+            });
+            const data = await res.json();
+
+            document.getElementById('calorie-number').textContent = Math.round(data.target_calories);
+            document.getElementById('calorie-ring').style.setProperty('--pct', '75%');
+
+            const macros = [
+                { label: 'Proteines', value: data.macros.protein, max: 250, color: '#b97577' },
+                { label: 'Lipides', value: data.macros.fat, max: 150, color: '#d8a5a6' },
+                { label: 'Glucides', value: data.macros.carbs, max: 350, color: '#8b5a5c' },
+            ];
+
+            document.getElementById('macro-mini').innerHTML = macros.map(m => {
+                const percent = Math.min((m.value / m.max) * 100, 100);
+                return `
+                    <div class="mb-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="flex items-center gap-2 text-xs sm:text-sm" style="color:#6b4547">
+                                <span class="w-2 h-2 rounded-full inline-block" style="background:${m.color}"></span>
+                                ${m.label}
+                            </span>
+                            <span class="font-medium text-xs sm:text-sm" style="color:#4a2c2e">${m.value}g</span>
+                        </div>
+                        <div class="w-full rounded-full h-2 overflow-hidden" style="background:#e0c4c5">
+                            <div class="h-2 rounded-full transition-all duration-500" style="width: ${percent}%; background: ${m.color}"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadFridge() {
+            const res = await fetch('/fridge', { headers: authHeaders() });
+            const items = await res.json();
+            const view = document.getElementById('fridge-view');
+            if (!items || items.length === 0) {
+                view.innerHTML = '<p class="text-sm" style="color:#a17879">Votre frigo est vide.</p>';
+                return;
+            }
+            view.innerHTML = items.map(item => `
+                <span class="px-4 py-2 rounded-full text-sm flex items-center gap-2" style="background:#e0c4c5; color:#4a2c2e">
+                    ${item.ingredient}
+                    <button onclick="removeFromFridge('${item.id}')" class="font-bold" style="color:#8b5a5c">&times;</button>
+                </span>
+            `).join('');
+        }
+
+        async function addToFridge() {
+            const ingredient = document.getElementById('new-ingredient').value;
+            if (!ingredient) return;
+            await fetch('/fridge?ingredient=' + encodeURIComponent(ingredient), { method: 'POST', headers: authHeaders() });
+            document.getElementById('new-ingredient').value = '';
+            loadFridge();
+        }
+
+        async function removeFromFridge(itemId) {
+            await fetch('/fridge/' + itemId, { method: 'DELETE', headers: authHeaders() });
+            loadFridge();
+        }
+
+        async function loadSuggestions() {
+            const view = document.getElementById('recipes-view');
+            view.innerHTML = '<p class="col-span-2" style="color:#a17879">Recherche...</p>';
+            const res = await fetch('/suggestions', { headers: authHeaders() });
+            const data = await res.json();
+            if (!data.suggestions || data.suggestions.length === 0) {
+                view.innerHTML = '<p class="col-span-2" style="color:#a17879">Ajoutez des ingredients pour voir des suggestions.</p>';
+                return;
+            }
+            view.innerHTML = data.suggestions.map(r => `
+                <div onclick="showRecipeDetails('${r.idMeal}')" class="rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition" style="background:#fff">
+                    <img src="${r.strMealThumb}" class="w-full h-28 object-cover">
+                    <div class="p-3">
+                        <p class="font-medium text-sm" style="color:#4a2c2e">${r.strMeal}</p>
+                        <p class="text-xs" style="color:#a17879">${r.matched_ingredients.length} en commun</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function showRecipeDetails(mealId) {
+            const view = document.getElementById('recipes-view');
+            view.innerHTML = '<p class="col-span-2" style="color:#a17879">Chargement...</p>';
+            const res = await fetch('/recipes/' + mealId + '/nutrition', { headers: authHeaders() });
+            if (!res.ok) { view.innerHTML = '<p class="col-span-2" style="color:#8b5a5c">Erreur.</p>'; return; }
+            const recipe = await res.json();
+
+            const totalCalories = recipe.ingredients.reduce((sum, i) => sum + (i.nutrition.calories || 0), 0);
+            const maxCal = Math.max(...recipe.ingredients.map(i => i.nutrition.calories || 0), 1);
+
+            view.innerHTML = `
+                <div class="col-span-1 sm:col-span-2">
+                    <button onclick="loadSuggestions()" class="text-sm font-medium hover:underline mb-3" style="color:#4a2c2e">&larr; Retour</button>
+
+                    <div class="relative rounded-3xl overflow-hidden mb-4" style="height: 220px;">
+                        <img src="${recipe.image}" class="w-full h-full object-cover">
+                        <div class="absolute bottom-0 left-0 right-0 p-4" style="background: linear-gradient(to top, rgba(74,44,46,0.85), transparent);">
+                            <p class="text-white text-xl font-bold">${recipe.name}</p>
+                            <p class="text-white text-sm opacity-90">${Math.round(totalCalories)} kcal au total</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        ${recipe.ingredients.map(item => {
+                            const cal = item.nutrition.calories || 0;
+                            const percent = Math.min((cal / maxCal) * 100, 100);
+                            return `
+                                <div class="p-4 rounded-2xl" style="background:#fff">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <p class="font-medium text-sm" style="color:#4a2c2e">${item.ingredient}</p>
+                                        <p class="text-xs" style="color:#a17879">${item.measure}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1 rounded-full h-2 overflow-hidden" style="background:#e0c4c5">
+                                            <div class="h-2 rounded-full" style="width: ${percent}%; background:#b97577"></div>
+                                        </div>
+                                        <span class="text-xs font-medium" style="color:#4a2c2e">${cal} kcal</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        loadProfile().then(profile => loadNutrition(profile));
+        loadFridge();
+        loadSuggestions();
+    </script>
+</body>
+</html>

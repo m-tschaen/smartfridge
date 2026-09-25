@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Fridge - Test</title>
+</head>
+<body style="font-family: sans-serif; max-width: 500px; margin: 40px auto;">
+    <h2>Smart Fridge & Nutrition Coach - Test</h2>
+
+    <h3>1. Compte</h3>
+    <input id="username" placeholder="Username"><br><br>
+    <input id="password" type="password" placeholder="Password"><br><br>
+    <button onclick="signup()">S'inscrire</button>
+    <button onclick="login()">Se connecter</button>
+
+    <h3>2. Profil</h3>
+    <input id="weight" placeholder="Poids (kg)"><br><br>
+    <input id="height" placeholder="Taille (cm)"><br><br>
+    <input id="age" placeholder="Age"><br><br>
+    <select id="gender">
+        <option value="male">Homme</option>
+        <option value="female">Femme</option>
+    </select><br><br>
+    <select id="activity">
+        <option value="sedentary">Sedentaire</option>
+        <option value="light">Legere</option>
+        <option value="moderate">Moderee</option>
+        <option value="active">Active</option>
+        <option value="very_active">Tres active</option>
+    </select><br><br>
+    <select id="goal">
+        <option value="loss">Perte</option>
+        <option value="maintain">Maintien</option>
+        <option value="gain">Prise</option>
+    </select><br><br>
+    <button onclick="sendProfile()">Envoyer le profil</button>
+    <button onclick="getNutritionPlan()">Voir le plan nutritionnel</button>
+
+    <h3>Resultat</h3>
+    <pre id="out" style="background: #f4f4f4; padding: 10px; white-space: pre-wrap;"></pre>
+
+    <script>
+        let token = "";
+
+        function show(data) {
+            document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function signup() {
+            const body = new URLSearchParams({
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+            });
+            const res = await fetch('/signup', {
+                method: 'POST',
+                body: body,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            show(await res.json());
+        }
+
+        async function login() {
+            const body = new URLSearchParams({
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+            });
+            const res = await fetch('/token', {
+                method: 'POST',
+                body: body,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            const data = await res.json();
+            if (data.access_token) {
+                token = data.access_token;
+            }
+            show(data);
+        }
+
+        function getProfileData() {
+            return {
+                weight_kg: parseFloat(document.getElementById('weight').value),
+                height_cm: parseFloat(document.getElementById('height').value),
+                age: parseInt(document.getElementById('age').value),
+                gender: document.getElementById('gender').value,
+                activity_level: document.getElementById('activity').value,
+                goal: document.getElementById('goal').value,
+            };
+        }
+
+        async function sendProfile() {
+            const res = await fetch('/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify(getProfileData()),
+            });
+            show(await res.json());
+        }
+
+        async function getNutritionPlan() {
+            const res = await fetch('/nutrition-plan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                },
+                body: JSON.stringify(getProfileData()),
+            });
+            show(await res.json());
+        }
+    </script>
+</body>
+</html>
