@@ -4,58 +4,60 @@
     <meta charset="UTF-8">
     <title>Smart Fridge - Connexion</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; }
+    </style>
 </head>
-<body class="bg-sky-50 min-h-screen flex items-center justify-center p-6">
+<body class="min-h-screen flex items-center justify-center p-6" style="background: #c99a9c;">
 
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-sky-100">
-        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">Smart Fridge</h1>
+    <div class="p-8 rounded-3xl shadow-xl w-full max-w-md" style="background: #f7ece7;">
+        <h1 class="text-2xl font-bold mb-6 text-center" style="color: #4a2c2e;">Smart Fridge</h1>
 
-        <!-- Toggle -->
-        <div class="flex mb-6 border border-sky-200 rounded overflow-hidden">
+        <div class="flex mb-6 rounded-full overflow-hidden" style="border: 2px solid #e0c4c5;">
             <button id="tab-login" onclick="showTab('login')"
-                    class="flex-1 p-2 bg-sky-100 text-sky-800 font-medium">
+                    class="flex-1 p-2 font-medium transition" style="background: #b97577; color: white;">
                 Se connecter
             </button>
             <button id="tab-signup" onclick="showTab('signup')"
-                    class="flex-1 p-2 bg-white text-gray-500">
+                    class="flex-1 p-2 transition" style="background: #f7ece7; color: #a17879;">
                 S'inscrire
             </button>
         </div>
 
-        <!-- Login form -->
         <div id="form-login">
             <input id="login-username" placeholder="Nom d'utilisateur"
-                   class="w-full p-2 mb-3 border border-sky-200 rounded">
+                   class="w-full p-3 mb-3 rounded-xl focus:outline-none transition" style="border: 2px solid #e0c4c5;">
             <input id="login-password" type="password" placeholder="Mot de passe"
-                   class="w-full p-2 mb-4 border border-sky-200 rounded">
+                   class="w-full p-3 mb-4 rounded-xl focus:outline-none transition" style="border: 2px solid #e0c4c5;">
             <button onclick="login()"
-                    class="w-full bg-orange-300 text-white p-2 rounded hover:bg-orange-400">
+                    class="w-full p-3 rounded-full text-white font-medium shadow-sm hover:shadow-md transition" style="background: #b97577;">
                 Se connecter
             </button>
         </div>
 
-        <!-- Signup form -->
         <div id="form-signup" class="hidden">
             <input id="signup-username" placeholder="Nom d'utilisateur"
-                   class="w-full p-2 mb-3 border border-sky-200 rounded">
+                   class="w-full p-3 mb-3 rounded-xl focus:outline-none transition" style="border: 2px solid #e0c4c5;">
             <input id="signup-password" type="password" placeholder="Mot de passe"
-                   class="w-full p-2 mb-4 border border-sky-200 rounded">
+                   class="w-full p-3 mb-4 rounded-xl focus:outline-none transition" style="border: 2px solid #e0c4c5;">
 
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <input id="signup-weight" type="number" placeholder="Poids (kg)"
-                       class="p-2 border border-sky-200 rounded">
+                       class="p-3 rounded-xl focus:outline-none transition" style="border: 2px solid #e0c4c5;">
                 <input id="signup-height" type="number" placeholder="Taille (cm)"
-                       class="p-2 border border-sky-200 rounded">
+                       class="p-3 rounded-xl focus:outline-none transition" style="border: 2px solid #e0c4c5;">
             </div>
             <input id="signup-age" type="number" placeholder="Age"
-                   class="w-full p-2 mb-3 border border-sky-200 rounded">
+                   class="w-full p-3 mb-3 rounded-xl focus:outline-none transition" style="border: 2px solid #e0c4c5;">
 
-            <select id="signup-gender" class="w-full p-2 mb-3 border border-sky-200 rounded">
+            <select id="signup-gender" class="w-full p-3 mb-3 rounded-xl" style="border: 2px solid #e0c4c5;">
                 <option value="male">Homme</option>
                 <option value="female">Femme</option>
             </select>
 
-            <select id="signup-activity" class="w-full p-2 mb-3 border border-sky-200 rounded">
+            <select id="signup-activity" class="w-full p-3 mb-3 rounded-xl" style="border: 2px solid #e0c4c5;">
                 <option value="sedentary">Sedentaire</option>
                 <option value="light">Legere</option>
                 <option value="moderate">Moderee</option>
@@ -63,19 +65,19 @@
                 <option value="very_active">Tres active</option>
             </select>
 
-            <select id="signup-goal" class="w-full p-2 mb-4 border border-sky-200 rounded">
+            <select id="signup-goal" class="w-full p-3 mb-4 rounded-xl" style="border: 2px solid #e0c4c5;">
                 <option value="loss">Perte de poids</option>
                 <option value="maintain">Maintien</option>
                 <option value="gain">Prise de poids</option>
             </select>
 
             <button onclick="signup()"
-                    class="w-full bg-orange-300 text-white p-2 rounded hover:bg-orange-400">
+                    class="w-full p-3 rounded-full text-white font-medium shadow-sm hover:shadow-md transition" style="background: #b97577;">
                 Créer mon compte
             </button>
         </div>
 
-        <p id="message" class="text-sm text-orange-600 mt-3 text-center"></p>
+        <p id="message" class="text-sm mt-3 text-center" style="color: #8b5a5c;"></p>
     </div>
 
     <script>
@@ -83,10 +85,20 @@
             document.getElementById('form-login').classList.toggle('hidden', tab !== 'login');
             document.getElementById('form-signup').classList.toggle('hidden', tab !== 'signup');
 
-            document.getElementById('tab-login').className =
-                'flex-1 p-2 ' + (tab === 'login' ? 'bg-sky-100 text-sky-800 font-medium' : 'bg-white text-gray-500');
-            document.getElementById('tab-signup').className =
-                'flex-1 p-2 ' + (tab === 'signup' ? 'bg-sky-100 text-sky-800 font-medium' : 'bg-white text-gray-500');
+            const loginTab = document.getElementById('tab-login');
+            const signupTab = document.getElementById('tab-signup');
+
+            if (tab === 'login') {
+                loginTab.style.background = '#b97577';
+                loginTab.style.color = 'white';
+                signupTab.style.background = '#f7ece7';
+                signupTab.style.color = '#a17879';
+            } else {
+                signupTab.style.background = '#b97577';
+                signupTab.style.color = 'white';
+                loginTab.style.background = '#f7ece7';
+                loginTab.style.color = '#a17879';
+            }
         }
 
         function showMessage(text) {
